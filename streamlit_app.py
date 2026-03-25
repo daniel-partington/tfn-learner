@@ -1,22 +1,24 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import gammainc
+from scipy.special import gammainc, gammaln
 
 st.set_page_config(page_title="TFN Teaching Tool", layout="wide")
 
 # --- Helper Functions ---
 def gamma_irf(t, A, n, a):
     """Continuous Gamma Impulse Response Function."""
-    # Using the Pastas/Hantush-like definition
-    return A * (t**(n-1)) * np.exp(-t/a) / (a**n * np.exp(st.special.loggamma(n)))
+    t = np.asarray(t, dtype=float)
+    return A * (t ** (n - 1)) * np.exp(-t / a) / (a**n * np.exp(gammaln(n)))
 
 def gamma_block(t, A, n, a, dt=1):
     """
     Gamma Block Response: Integrated IRF over time step dt.
     Using the regularized lower incomplete gamma function.
     """
-    return A * (gammainc(n, t/a) - gammainc(n, (t-dt)/a))
+    t = np.asarray(t, dtype=float)
+    lower = np.clip(t - dt, a_min=0.0, a_max=None)
+    return A * (gammainc(n, t / a) - gammainc(n, lower / a))
 
 # --- Sidebar Navigation ---
 st.sidebar.title("TFN Academy")
